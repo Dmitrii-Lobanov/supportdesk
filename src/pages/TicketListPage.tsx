@@ -1,20 +1,28 @@
 import { useState } from "react";
-import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
 import CreateTicketForm from "../components/CreateTicketForm";
 import TicketCard from "../components/TicketCard";
 import Select from "../components/Select";
+import { usePaginatedQuery } from "convex/react";
 import "../styles/ticket-filters.css";
+import "../styles/ticket-pagination.css";
 
 type StatusFilter = Doc<"tickets">["status"] | "all";
+
+const PAGE_SIZE = 10;
 
 export default function TicketListPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  const tickets = useQuery(
+  const {
+    results: tickets,
+    status: paginationStatus,
+    loadMore,
+  } = usePaginatedQuery(
     api.tickets.list,
     statusFilter === "all" ? {} : { status: statusFilter },
+    { initialNumItems: PAGE_SIZE },
   );
 
   return (
@@ -57,7 +65,7 @@ export default function TicketListPage() {
           />
         </div>
 
-        {tickets === undefined ? (
+        {paginationStatus === "LoadingFirstPage" ? (
           <p role="status">Loading tickets…</p>
         ) : tickets.length === 0 ? (
           <p>
@@ -71,6 +79,26 @@ export default function TicketListPage() {
               <TicketCard key={ticket._id} ticket={ticket} />
             ))}
           </ul>
+        )}
+
+        {(paginationStatus === "CanLoadMore" ||
+          paginationStatus === "LoadingMore") && (
+          <div className="ticket-pagination">
+            <button
+              className="load-more-button"
+              type="button"
+              onClick={() => loadMore(PAGE_SIZE)}
+              disabled={paginationStatus !== "CanLoadMore"}
+            >
+              {paginationStatus === "LoadingMore"
+                ? "Loading…"
+                : "Load more tickets"}
+            </button>
+
+            {paginationStatus === "LoadingMore" && (
+              <span role="status">Loading more tickets…</span>
+            )}
+          </div>
         )}
       </section>
     </main>

@@ -1,8 +1,10 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { paginationOptsValidator } from "convex/server";
 
 export const list = query({
   args: {
+    paginationOpts: paginationOptsValidator,
     status: v.optional(
       v.union(
         v.literal("open"),
@@ -15,14 +17,17 @@ export const list = query({
     const status = args.status;
 
     if (status === undefined) {
-      return await ctx.db.query("tickets").order("desc").take(50);
+      return await ctx.db
+        .query("tickets")
+        .order("desc")
+        .paginate(args.paginationOpts);
     }
 
     return await ctx.db
       .query("tickets")
       .withIndex("by_status", (q) => q.eq("status", status))
       .order("desc")
-      .take(50);
+      .paginate(args.paginationOpts);
   },
 });
 
