@@ -13,5 +13,5 @@ export default defineSchema({
     priority: v.optional(
       v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
     ),
-  }),
+  }).index("by_status", ["status"]),
 });

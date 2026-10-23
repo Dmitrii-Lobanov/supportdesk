@@ -2,9 +2,27 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("tickets").order("desc").take(50);
+  args: {
+    status: v.optional(
+      v.union(
+        v.literal("open"),
+        v.literal("in_progress"),
+        v.literal("resolved"),
+      ),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const status = args.status;
+
+    if (status === undefined) {
+      return await ctx.db.query("tickets").order("desc").take(50);
+    }
+
+    return await ctx.db
+      .query("tickets")
+      .withIndex("by_status", (q) => q.eq("status", status))
+      .order("desc")
+      .take(50);
   },
 });
 

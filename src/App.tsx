@@ -10,17 +10,26 @@ import type { Doc } from "../convex/_generated/dataModel";
 import TicketDetailPage from "./pages/TicketDetailPage";
 import "./styles/layout.css";
 import "./styles/ticket-form.css";
+import "./styles/ticket-filters.css";
 
 function TicketListPage() {
-  const tickets = useQuery(api.tickets.list);
-  const createTicket = useMutation(api.tickets.create);
-
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [priority, setPriority] =
     useState<NonNullable<Doc<"tickets">["priority"]>>("medium");
+
+  const [statusFilter, setStatusFilter] = useState<
+    Doc<"tickets">["status"] | "all"
+  >("all");
+
+  const tickets = useQuery(
+    api.tickets.list,
+    statusFilter === "all" ? {} : { status: statusFilter },
+  );
+
+  const createTicket = useMutation(api.tickets.create);
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -112,10 +121,39 @@ function TicketListPage() {
       <section className="panel" aria-labelledby="tickets-heading">
         <h2 id="tickets-heading">Latest tickets</h2>
 
+        <div className="ticket-filters">
+          <label htmlFor="status-filter">Filter by status</label>
+
+          <Select
+            id="status-filter"
+            value={statusFilter}
+            options={[
+              { value: "all", label: "All statuses" },
+              { value: "open", label: "Open" },
+              { value: "in_progress", label: "In progress" },
+              { value: "resolved", label: "Resolved" },
+            ]}
+            onValueChange={(value) => {
+              if (
+                value === "all" ||
+                value === "open" ||
+                value === "in_progress" ||
+                value === "resolved"
+              ) {
+                setStatusFilter(value);
+              }
+            }}
+          />
+        </div>
+
         {tickets === undefined ? (
           <p role="status">Loading tickets…</p>
         ) : tickets.length === 0 ? (
-          <p>No tickets yet. Create your first ticket above.</p>
+          <p>
+            {statusFilter === "all"
+              ? "No tickets yet. Create your first ticket above."
+              : "No tickets match this status."}
+          </p>
         ) : (
           <ul className="ticket-list">
             {tickets.map((ticket) => (
