@@ -14,4 +14,7 @@ export default defineSchema({
       v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
     ),
   }).index("by_status", ["status"]),
+  workspaceMembers: defineTable({
+    clerkUserId: v.string(),
+  }).index("by_clerk_user", ["clerkUserId"]),
 });

@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { paginationOptsValidator } from "convex/server";
+import { requireMember } from "./lib/auth";
 
 export const list = query({
   args: {
@@ -14,6 +15,8 @@ export const list = query({
     ),
   },
   handler: async (ctx, args) => {
+    await requireMember(ctx);
+
     const status = args.status;
 
     if (status === undefined) {
@@ -38,6 +41,8 @@ export const create = mutation({
     priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
   },
   handler: async (ctx, args) => {
+    await requireMember(ctx);
+
     const subject = args.subject.trim();
     const description = args.description.trim();
 
@@ -68,6 +73,8 @@ export const updateStatus = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    await requireMember(ctx);
+
     const ticket = await ctx.db.get(args.ticketId);
 
     if (!ticket) {
@@ -85,6 +92,8 @@ export const get = query({
     ticketId: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireMember(ctx);
+
     const ticketId = ctx.db.normalizeId("tickets", args.ticketId);
 
     if (!ticketId) {
