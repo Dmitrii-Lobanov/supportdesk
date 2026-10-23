@@ -7,6 +7,8 @@ import TicketCard from "./components/TicketCard";
 import { BrowserRouter, Link, Route, Routes } from "react-router";
 import TicketDetailPage from "./pages/TicketDetailPage";
 import "./App.css";
+import "./styles/layout.css";
+import "./styles/ticket-form.css";
 
 function TicketListPage() {
   const tickets = useQuery(api.tickets.list);

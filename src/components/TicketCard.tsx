@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import { Link } from "react-router";
 import type { Doc } from "../../convex/_generated/dataModel";
 import Select from "./Select";
+import "./TicketCard.css";
 
 type TicketCardProps = {
   ticket: Doc<"tickets">;

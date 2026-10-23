@@ -41,6 +41,27 @@ textarea {
     box-shadow 150ms ease;
 }
 
+:where(input, textarea, button, select):focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+[role="alert"] {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  color: #9f1c13;
+  background: #fff1f0;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

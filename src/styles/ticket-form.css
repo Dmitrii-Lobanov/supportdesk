@@ -1,0 +1,72 @@
+.ticket-form {
+  display: grid;
+  gap: 10px;
+}
+
+.ticket-form label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.ticket-form label:not(:first-child) {
+  margin-top: 10px;
+}
+
+.ticket-form input,
+.ticket-form textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #aab6c8;
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.ticket-form input:hover,
+.ticket-form textarea:hover {
+  border-color: #78869d;
+}
+
+.ticket-form textarea {
+  min-height: 132px;
+  resize: vertical;
+}
+
+.ticket-form input:disabled,
+.ticket-form textarea:disabled {
+  color: var(--text-muted);
+  background: #f1f5f9;
+}
+
+.ticket-form .button {
+  justify-self: start;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 11px 18px;
+  color: #fff;
+  background: var(--primary);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ticket-form .button:hover:not(:disabled) {
+  background: #3730a3;
+  box-shadow: 0 3px 8px rgb(67 56 202 / 18%);
+}
+
+.ticket-form .button:disabled {
+  color: #536178;
+  background: #e8edf5;
+  border-color: #dce3ee;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .ticket-form .button {
+    width: 100%;
+  }
+}

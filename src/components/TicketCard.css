@@ -1,0 +1,93 @@
+.ticket {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+}
+
+.ticket h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.ticket-description {
+  margin: 0 0 14px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.ticket > p:not(.ticket-description):not([role="alert"]) {
+  margin: 0 0 14px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.ticket-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: #aab6c8;
+  text-underline-offset: 4px;
+}
+
+.ticket-link:hover {
+  color: var(--primary);
+  text-decoration-color: currentColor;
+}
+
+.ticket-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ticket-controls > [role="status"] {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.status-control {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--text-muted);
+}
+
+.status-control > label {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge--open {
+  color: #1e40af;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.badge--in_progress {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.badge--resolved {
+  color: #166534;
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+}

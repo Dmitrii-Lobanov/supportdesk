@@ -1,4 +1,5 @@
 import * as SelectPrimitive from "@radix-ui/react-select";
+import "./Select.css";
 
 type SelectOption = {
   value: string;

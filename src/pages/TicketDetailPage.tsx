@@ -2,6 +2,7 @@ import { useQuery } from "convex/react";
 import { Link, useParams } from "react-router";
 import { api } from "../../convex/_generated/api";
 import TicketCard from "../components/TicketCard";
+import "./TicketDetailPage.css";
 
 export default function TicketDetailPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
