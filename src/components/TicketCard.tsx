@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
+import { Link } from "react-router";
 import type { Doc } from "../../convex/_generated/dataModel";
 
 type TicketCardProps = {
@@ -47,7 +48,11 @@ export default function TicketCard({ ticket }: TicketCardProps) {
 
   return (
     <li className="ticket">
-      <h3>{ticket.subject}</h3>
+      <h3>
+        <Link className="ticket-link" to={`/tickets/${ticket._id}`}>
+          {ticket.subject}
+        </Link>
+      </h3>
       <p className="ticket-description">{ticket.description}</p>
 
       <p>

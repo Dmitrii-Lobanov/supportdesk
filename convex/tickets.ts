@@ -54,3 +54,18 @@ export const updateStatus = mutation({
     });
   },
 });
+
+export const get = query({
+  args: {
+    ticketId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const ticketId = ctx.db.normalizeId("tickets", args.ticketId);
+
+    if (!ticketId) {
+      return null;
+    }
+
+    return await ctx.db.get(ticketId);
+  },
+});

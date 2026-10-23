@@ -257,3 +257,34 @@ button:disabled {
   background: #ecfdf3;
   border-color: #bbf7d0;
 }
+
+.ticket-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: #aab6c8;
+  text-underline-offset: 4px;
+}
+
+.ticket-link:hover {
+  color: var(--primary);
+  text-decoration-color: currentColor;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 24px;
+  color: var(--primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 4px;
+  border-radius: 2px;
+}

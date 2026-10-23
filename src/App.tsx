@@ -4,9 +4,11 @@ import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../convex/_generated/api";
 import TicketCard from "./components/TicketCard";
+import { BrowserRouter, Link, Route, Routes } from "react-router";
+import TicketDetailPage from "./pages/TicketDetailPage";
 import "./App.css";
 
-export default function App() {
+function TicketListPage() {
   const tickets = useQuery(api.tickets.list);
   const createTicket = useMutation(api.tickets.create);
 
@@ -98,5 +100,27 @@ export default function App() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<TicketListPage />} />
+        <Route path="/tickets/:ticketId" element={<TicketDetailPage />} />
+        <Route
+          path="*"
+          element={
+            <main className="app">
+              <h1>Page not found</h1>
+              <p>
+                <Link to="/">Return to tickets</Link>
+              </p>
+            </main>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
