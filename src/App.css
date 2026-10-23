@@ -1,30 +1,78 @@
-.app {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 48px 24px;
+form {
+  display: grid;
+  gap: 12px;
 }
 
-.eyebrow {
-  color: #4555b5;
-  font-weight: 700;
+label {
+  font-weight: 600;
 }
 
-h1 {
-  margin: 8px 0;
-}
-
-header > p:last-child {
-  color: #526079;
-}
-
-.panel {
-  margin-top: 32px;
-  padding: 24px;
+input,
+textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  color: inherit;
   background: white;
-  border: 1px solid #dce2ec;
-  border-radius: 12px;
+  border: 1px solid #8793a8;
+  border-radius: 6px;
 }
 
-.panel h2 {
-  margin-top: 0;
+textarea {
+  resize: vertical;
+}
+
+button {
+  justify-self: start;
+  padding: 10px 16px;
+  color: white;
+  background: #3747a5;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+:where(input, textarea, button):focus-visible {
+  outline: 3px solid #6878df;
+  outline-offset: 3px;
+}
+
+[role="alert"] {
+  color: #b42318;
+}
+
+.ticket-list {
+  display: grid;
+  gap: 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.ticket {
+  padding: 16px;
+  border: 1px solid #dce2ec;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+
+.ticket h3 {
+  margin: 0 0 8px;
+}
+
+.ticket-description {
+  white-space: pre-wrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  color: #284a36;
+  background: #e8f5ec;
+  border-radius: 4px;
+  font-size: 0.875rem;
 }
