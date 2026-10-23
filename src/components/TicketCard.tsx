@@ -26,6 +26,14 @@ export default function TicketCard({ ticket }: TicketCardProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const priority = ticket.priority ?? "medium";
+
+  const priorityLabel = {
+    low: "Low",
+    medium: "Medium",
+    high: "High",
+  }[priority];
+
   async function handleStatusChange(value: string) {
     if (!isTicketStatus(value) || isUpdating) return;
 
@@ -63,6 +71,10 @@ export default function TicketCard({ ticket }: TicketCardProps) {
           {new Date(ticket._creationTime).toLocaleString()}
         </time>
       </p>
+
+      <span className={`badge priority--${priority}`}>
+        {priorityLabel} priority
+      </span>
 
       <div className="ticket-controls">
         <span className={`badge badge--${ticket.status}`}>

@@ -12,6 +12,7 @@ export const create = mutation({
   args: {
     subject: v.string(),
     description: v.string(),
+    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
   },
   handler: async (ctx, args) => {
     const subject = args.subject.trim();
@@ -29,6 +30,7 @@ export const create = mutation({
       subject,
       description,
       status: "open",
+      priority: args.priority,
     });
   },
 });

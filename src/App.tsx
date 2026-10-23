@@ -1,12 +1,13 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../convex/_generated/api";
 import TicketCard from "./components/TicketCard";
 import { BrowserRouter, Link, Route, Routes } from "react-router";
+import Select from "./components/Select";
+import type { Doc } from "../convex/_generated/dataModel";
 import TicketDetailPage from "./pages/TicketDetailPage";
-import "./App.css";
 import "./styles/layout.css";
 import "./styles/ticket-form.css";
 
@@ -18,8 +19,10 @@ function TicketListPage() {
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [priority, setPriority] =
+    useState<NonNullable<Doc<"tickets">["priority"]>>("medium");
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (isSubmitting) return;
@@ -28,7 +31,8 @@ function TicketListPage() {
     setError(null);
 
     try {
-      await createTicket({ subject, description });
+      await createTicket({ subject, description, priority });
+      setPriority("medium");
       setSubject("");
       setDescription("");
     } catch (error) {
@@ -53,7 +57,7 @@ function TicketListPage() {
       <section className="panel" aria-labelledby="create-heading">
         <h2 id="create-heading">Create a ticket</h2>
 
-        <form onSubmit={handleSubmit}>
+        <form className="ticket-form" onSubmit={handleSubmit}>
           <label htmlFor="subject">Subject</label>
           <input
             id="subject"
@@ -75,9 +79,28 @@ function TicketListPage() {
             required
           />
 
+          <label htmlFor="priority">Priority</label>
+
+          <Select
+            id="priority"
+            value={priority}
+            options={[
+              { value: "low", label: "Low" },
+              { value: "medium", label: "Medium" },
+              { value: "high", label: "High" },
+            ]}
+            onValueChange={(value) => {
+              if (value === "low" || value === "medium" || value === "high") {
+                setPriority(value);
+              }
+            }}
+            disabled={isSubmitting}
+          />
+
           {error && <p role="alert">{error}</p>}
 
           <button
+            className="button"
             type="submit"
             disabled={isSubmitting || !subject.trim() || !description.trim()}
           >

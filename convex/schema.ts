@@ -10,5 +10,8 @@ export default defineSchema({
       v.literal("in_progress"),
       v.literal("resolved"),
     ),
+    priority: v.optional(
+      v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+    ),
   }),
 });

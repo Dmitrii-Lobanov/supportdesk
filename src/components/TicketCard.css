@@ -91,3 +91,21 @@
   background: #ecfdf3;
   border-color: #bbf7d0;
 }
+
+.priority--low {
+  color: #475569;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.priority--medium {
+  color: #6b21a8;
+  background: #faf5ff;
+  border-color: #e9d5ff;
+}
+
+.priority--high {
+  color: #991b1b;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
