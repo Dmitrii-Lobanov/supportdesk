@@ -1,0 +1,30 @@
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.eyebrow {
+  color: #4555b5;
+  font-weight: 700;
+}
+
+h1 {
+  margin: 8px 0;
+}
+
+header > p:last-child {
+  color: #526079;
+}
+
+.panel {
+  margin-top: 32px;
+  padding: 24px;
+  background: white;
+  border: 1px solid #dce2ec;
+  border-radius: 12px;
+}
+
+.panel h2 {
+  margin-top: 0;
+}
