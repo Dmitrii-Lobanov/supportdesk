@@ -32,3 +32,25 @@ export const create = mutation({
     });
   },
 });
+
+export const updateStatus = mutation({
+  args: {
+    ticketId: v.id("tickets"),
+    status: v.union(
+      v.literal("open"),
+      v.literal("in_progress"),
+      v.literal("resolved"),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const ticket = await ctx.db.get(args.ticketId);
+
+    if (!ticket) {
+      throw new ConvexError("Ticket not found.");
+    }
+
+    await ctx.db.patch(args.ticketId, {
+      status: args.status,
+    });
+  },
+});

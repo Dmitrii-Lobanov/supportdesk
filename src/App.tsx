@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../convex/_generated/api";
+import TicketCard from "./components/TicketCard";
 import "./App.css";
 
 export default function App() {
@@ -91,17 +92,7 @@ export default function App() {
         ) : (
           <ul className="ticket-list">
             {tickets.map((ticket) => (
-              <li key={ticket._id} className="ticket">
-                <h3>{ticket.subject}</h3>
-                <p className="ticket-description">{ticket.description}</p>
-                <p>
-                  Created:{" "}
-                  <time dateTime={new Date(ticket._creationTime).toISOString()}>
-                    {new Date(ticket._creationTime).toLocaleString()}
-                  </time>
-                </p>
-                <span className="badge">{ticket.status}</span>
-              </li>
+              <TicketCard key={ticket._id} ticket={ticket} />
             ))}
           </ul>
         )}

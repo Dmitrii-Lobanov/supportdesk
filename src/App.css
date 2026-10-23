@@ -199,3 +199,61 @@ button:disabled {
     width: 100%;
   }
 }
+
+.ticket-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ticket-controls > [role="status"] {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.status-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.status-control select {
+  min-height: 40px;
+  max-width: 100%;
+  padding: 8px 12px;
+  color: #172033;
+  background: #fff;
+  border: 1px solid #aab6c8;
+  border-radius: 8px;
+}
+
+.status-control select:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.status-control select:disabled {
+  background: #f1f5f9;
+  cursor: wait;
+}
+
+.badge--open {
+  color: #1e40af;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.badge--in_progress {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.badge--resolved {
+  color: #166534;
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+}
