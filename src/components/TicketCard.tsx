@@ -4,6 +4,7 @@ import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Link } from "react-router";
 import type { Doc } from "../../convex/_generated/dataModel";
+import Select from "./Select";
 
 type TicketCardProps = {
   ticket: Doc<"tickets">;
@@ -67,20 +68,23 @@ export default function TicketCard({ ticket }: TicketCardProps) {
           {statusLabels[ticket.status]}
         </span>
 
-        <label className="status-control">
-          <span>Status</span>
-          <select
+        <div className="status-control">
+          <label htmlFor={`status-${ticket._id}`}>Status</label>
+
+          <Select
+            id={`status-${ticket._id}`}
             value={ticket.status}
-            onChange={(event) => {
-              void handleStatusChange(event.target.value);
+            options={[
+              { value: "open", label: "Open" },
+              { value: "in_progress", label: "In progress" },
+              { value: "resolved", label: "Resolved" },
+            ]}
+            onValueChange={(value) => {
+              void handleStatusChange(value);
             }}
             disabled={isUpdating}
-          >
-            <option value="open">Open</option>
-            <option value="in_progress">In progress</option>
-            <option value="resolved">Resolved</option>
-          </select>
-        </label>
+          />
+        </div>
 
         {isUpdating && <span role="status">Saving…</span>}
       </div>
