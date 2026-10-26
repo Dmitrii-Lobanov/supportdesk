@@ -1,14 +1,15 @@
 import { useState } from "react";
 import type { SubmitEvent } from "react";
-import { useMutation } from "convex/react";
+import { useAction } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
 import Select from "./Select";
+import CustomerPicker from "./CustomerPicker";
 import "../styles/ticket-form.css";
 
 export default function CreateTicketForm() {
-  const createTicket = useMutation(api.tickets.create);
+  const createTicket = useAction(api.tickets.create);
 
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
@@ -17,6 +18,7 @@ export default function CreateTicketForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [customerId, setCustomerId] = useState("");
+  const [pickerVersion, setPickerVersion] = useState(0);
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,11 +29,18 @@ export default function CreateTicketForm() {
     setError(null);
 
     try {
-      await createTicket({ subject, description, priority, customerId });
+      await createTicket({
+        subject,
+        description,
+        priority,
+        ...(customerId ? { customerId } : {}),
+      });
+
       setSubject("");
       setDescription("");
       setPriority("medium");
       setCustomerId("");
+      setPickerVersion((version) => version + 1);
     } catch (error) {
       setError(
         error instanceof ConvexError
@@ -45,17 +54,11 @@ export default function CreateTicketForm() {
 
   return (
     <form className="ticket-form" onSubmit={handleSubmit}>
-      <label htmlFor="customer-id">Customer ID</label>
-      <input
-        id="customer-id"
+      <CustomerPicker
+        key={pickerVersion}
         value={customerId}
-        onChange={(event) => setCustomerId(event.target.value)}
-        placeholder="cus_001"
-        maxLength={68}
-        pattern="cus_[a-zA-Z0-9_-]{1,64}"
-        title="Use cus_ followed by 1–64 letters, numbers, underscores, or hyphens."
+        onChange={setCustomerId}
         disabled={isSubmitting}
-        required
       />
 
       <label htmlFor="subject">Subject</label>
@@ -101,12 +104,7 @@ export default function CreateTicketForm() {
       <button
         className="button"
         type="submit"
-        disabled={
-          isSubmitting ||
-          !subject.trim() ||
-          !description.trim() ||
-          !customerId.trim()
-        }
+        disabled={isSubmitting || !subject.trim() || !description.trim()}
       >
         {isSubmitting ? "Creating…" : "Create ticket"}
       </button>

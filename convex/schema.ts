@@ -18,4 +18,22 @@ export default defineSchema({
   workspaceMembers: defineTable({
     clerkUserId: v.string(),
   }).index("by_clerk_user", ["clerkUserId"]),
+  jobs: defineTable({
+    ticketId: v.id("tickets"),
+    requestedBy: v.string(),
+    status: v.union(
+      v.literal("queued"),
+      v.literal("running"),
+      v.literal("succeeded"),
+      v.literal("failed"),
+    ),
+    input: v.object({
+      subject: v.string(),
+      description: v.string(),
+    }),
+    startedAt: v.optional(v.number()),
+    finishedAt: v.optional(v.number()),
+    result: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }).index("by_ticket", ["ticketId"]),
 });

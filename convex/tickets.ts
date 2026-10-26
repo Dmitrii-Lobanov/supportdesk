@@ -1,7 +1,10 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { action, internalMutation, mutation, query } from "./_generated/server";
 import { paginationOptsValidator } from "convex/server";
 import { requireMember } from "./lib/auth";
+import { api, internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import { fetchCustomer } from "./lib/customerApi";
 
 export const list = query({
   args: {
@@ -34,24 +37,25 @@ export const list = query({
   },
 });
 
-export const create = mutation({
-  args: {
-    subject: v.string(),
-    description: v.string(),
-    customerId: v.string(),
-    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
-  },
-  handler: async (ctx, args) => {
-    await requireMember(ctx);
+const createArgs = {
+  subject: v.string(),
+  description: v.string(),
+  customerId: v.optional(v.string()),
+  priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+};
+
+export const create = action({
+  args: createArgs,
+  handler: async (ctx, args): Promise<Id<"tickets">> => {
+    const membership = await ctx.runQuery(api.memberships.current, {});
+
+    if (!membership) {
+      throw new ConvexError("Workspace access required.");
+    }
 
     const subject = args.subject.trim();
     const description = args.description.trim();
-
-    const customerId = args.customerId.trim();
-
-    if (!/^cus_[a-zA-Z0-9_-]{1,64}$/.test(customerId)) {
-      throw new ConvexError("Enter a valid customer ID starting with cus_.");
-    }
+    const customerId = args.customerId?.trim();
 
     if (subject.length === 0 || subject.length > 120) {
       throw new ConvexError("Subject must contain 1–120 characters.");
@@ -61,12 +65,40 @@ export const create = mutation({
       throw new ConvexError("Description must contain 1–5000 characters.");
     }
 
-    return await ctx.db.insert("tickets", {
+    if (customerId !== undefined) {
+      if (!/^cus_[a-zA-Z0-9_-]{1,64}$/.test(customerId)) {
+        throw new ConvexError("Invalid customer ID.");
+      }
+
+      const customer = await fetchCustomer(customerId);
+
+      if (!customer) {
+        throw new ConvexError(
+          "The selected customer no longer exists. Choose another customer.",
+        );
+      }
+    }
+
+    return await ctx.runMutation(internal.tickets.insert, {
       subject,
       description,
-      customerId,
+      priority: args.priority,
+      ...(customerId === undefined ? {} : { customerId }),
+    });
+  },
+});
+
+export const insert = internalMutation({
+  args: createArgs,
+  handler: async (ctx, args) => {
+    await requireMember(ctx);
+
+    return await ctx.db.insert("tickets", {
+      subject: args.subject,
+      description: args.description,
       status: "open",
       priority: args.priority,
+      ...(args.customerId === undefined ? {} : { customerId: args.customerId }),
     });
   },
 });

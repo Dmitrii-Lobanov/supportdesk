@@ -2,15 +2,53 @@ import { ConvexError, v } from "convex/values";
 import { z } from "zod";
 import { action } from "./_generated/server";
 import { api } from "./_generated/api";
+import {
+  customerSchema,
+  fetchCustomer,
+  requestCustomerApi,
+} from "./lib/customerApi";
+import type { Customer } from "./lib/customerApi";
 
-const customerSchema = z.object({
-  id: z.string().regex(/^cus_[a-zA-Z0-9_-]{1,64}$/),
-  name: z.string().trim().min(1),
-  email: z.email(),
-  plan: z.enum(["free", "pro", "enterprise"]),
+const searchResponseSchema = z.object({
+  customers: z.array(customerSchema).max(20),
 });
 
-type Customer = z.infer<typeof customerSchema>;
+export const search = action({
+  args: {
+    search: v.string(),
+  },
+  handler: async (ctx, args): Promise<Customer[]> => {
+    const membership = await ctx.runQuery(api.memberships.current, {});
+
+    if (!membership) {
+      throw new ConvexError("Workspace access required.");
+    }
+
+    const search = args.search.trim();
+
+    if (search.length > 100) {
+      throw new ConvexError("Search must contain at most 100 characters.");
+    }
+
+    const body = await requestCustomerApi("/customers", {
+      q: search,
+    });
+
+    const result = searchResponseSchema.safeParse(body);
+
+    if (!result.success) {
+      throw new ConvexError("Customer service returned invalid search results.");
+    }
+
+    const ids = result.data.customers.map((customer) => customer.id);
+
+    if (new Set(ids).size !== ids.length) {
+      throw new ConvexError("Customer service returned duplicate customers.");
+    }
+
+    return result.data.customers;
+  },
+});
 
 export const getForTicket = action({
   args: {
@@ -29,79 +67,6 @@ export const getForTicket = action({
       return null;
     }
 
-    const baseUrl = process.env.CUSTOMER_API_BASE_URL;
-
-    if (!baseUrl) {
-      throw new ConvexError("Customer service is not configured.");
-    }
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-
-    try {
-      const url = new URL(
-        `/customers/${encodeURIComponent(ticket.customerId)}`,
-        baseUrl,
-      );
-
-      if (url.protocol !== "https:") {
-        throw new ConvexError("Customer service requires an HTTPS URL.");
-      }
-
-      const testMode = process.env.CUSTOMER_API_TEST_MODE;
-
-      if (testMode) {
-        url.searchParams.set("mode", testMode);
-      }
-
-      const response = await fetch(url, {
-        signal: controller.signal,
-      });
-
-      console.log("Customer API response", {
-        url: url.toString(),
-        status: response.status,
-      });
-
-      if (response.status === 404) {
-        return null;
-      }
-
-      if (!response.ok) {
-        console.error("Customer API failure", {
-          status: response.status,
-          body: (await response.text()).slice(0, 1000),
-        });
-
-        throw new ConvexError(
-          "Customer service is unavailable. Please try again.",
-        );
-      }
-
-      const body: unknown = await response.json();
-      const result = customerSchema.safeParse(body);
-
-      if (!result.success || result.data.id !== ticket.customerId) {
-        throw new ConvexError(
-          "Customer service returned invalid customer data.",
-        );
-      }
-
-      return result.data;
-    } catch (error) {
-      if (error instanceof ConvexError) {
-        throw error;
-      }
-
-      if (controller.signal.aborted) {
-        throw new ConvexError("Customer lookup timed out. Please try again.");
-      }
-
-      throw new ConvexError(
-        "Could not read the customer response. Please try again.",
-      );
-    } finally {
-      clearTimeout(timeout);
-    }
+    return await fetchCustomer(ticket.customerId);
   },
 });

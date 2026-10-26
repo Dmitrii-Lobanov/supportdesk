@@ -10,6 +10,7 @@
 
 import type * as customers from "../customers.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_customerApi from "../lib/customerApi.js";
 import type * as memberships from "../memberships.js";
 import type * as tickets from "../tickets.js";
 
@@ -22,6 +23,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   customers: typeof customers;
   "lib/auth": typeof lib_auth;
+  "lib/customerApi": typeof lib_customerApi;
   memberships: typeof memberships;
   tickets: typeof tickets;
 }>;
