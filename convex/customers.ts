@@ -37,7 +37,9 @@ export const search = action({
     const result = searchResponseSchema.safeParse(body);
 
     if (!result.success) {
-      throw new ConvexError("Customer service returned invalid search results.");
+      throw new ConvexError(
+        "Customer service returned invalid search results.",
+      );
     }
 
     const ids = result.data.customers.map((customer) => customer.id);

@@ -1,0 +1,47 @@
+.analysis-panel {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.analysis-panel h2 {
+  margin-bottom: 12px;
+}
+
+.analysis-note {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.analysis-result {
+  padding: 16px;
+  color: #273449;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.analysis-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  color: #fff;
+  background: var(--primary);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.analysis-button:hover:not(:disabled) {
+  background: #3730a3;
+}
+
+.analysis-button:disabled {
+  color: var(--text-muted);
+  background: #e8edf5;
+  cursor: not-allowed;
+}

@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router";
 import { api } from "../../convex/_generated/api";
 import TicketCard from "../components/TicketCard";
 import CustomerPanel from "../components/CustomerPanel";
+import AnalysisPanel from "../components/AnalysisPanel";
 import "./TicketDetailPage.css";
 
 export default function TicketDetailPage() {
@@ -35,6 +36,8 @@ export default function TicketDetailPage() {
               key={`${ticket._id}:${ticket.customerId ?? "none"}`}
               ticket={ticket}
             />
+
+            <AnalysisPanel key={ticket._id} ticketId={ticket._id} />
           </>
         )}
       </section>
