@@ -54,9 +54,10 @@ const server = createServer((request, response) => {
     return;
   }
 
+  const isSearch = url.pathname === "/customers";
   const match = /^\/customers\/([a-zA-Z0-9_-]+)$/.exec(url.pathname);
 
-  if (!match) {
+  if (!isSearch && !match) {
     sendError(response, 404, "ROUTE_NOT_FOUND", "Route not found.");
     return;
   }
@@ -78,32 +79,50 @@ const server = createServer((request, response) => {
     return;
   }
 
-  const customer = customers.get(match[1]);
+  let body;
 
-  if (!customer) {
-    sendError(response, 404, "CUSTOMER_NOT_FOUND", "Customer not found.");
-    return;
+  if (isSearch) {
+    const search = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+
+    if (search.length > 100) {
+      sendError(response, 400, "INVALID_SEARCH", "Search is too long.");
+      return;
+    }
+
+    const matches = [...customers.values()].filter((customer) =>
+      [customer.id, customer.name, customer.email].some((value) =>
+        value.toLowerCase().includes(search),
+      ),
+    );
+
+    body = { customers: matches.slice(0, 20) };
+  } else {
+    const customer = customers.get(match[1]);
+
+    if (!customer) {
+      sendError(response, 404, "CUSTOMER_NOT_FOUND", "Customer not found.");
+      return;
+    }
+
+    body = customer;
   }
 
   if (mode === "invalid") {
-    sendJson(response, 200, {
-      id: customer.id,
-      name: 123,
-      plan: "unknown",
-    });
-    return;
+    body = isSearch
+      ? { customers: [{ id: "cus_001", name: 123 }] }
+      : { id: match[1], name: 123, plan: "unknown" };
   }
 
   if (mode === "slow") {
     setTimeout(() => {
       if (!response.destroyed) {
-        sendJson(response, 200, customer);
+        sendJson(response, 200, body);
       }
     }, 2000);
     return;
   }
 
-  sendJson(response, 200, customer);
+  sendJson(response, 200, body);
 });
 
 server.listen(3001, "127.0.0.1", () => {

@@ -85,3 +85,50 @@ reachable HTTPS endpoint.
 
 The integration must validate response data at runtime rather than
 assuming an HTTP 200 response contains a valid customer.
+
+## Customer search
+
+GET /customers?q=alex
+
+Search matches customer ID, name, or email, ignoring case.
+The query is optional and limited to 100 characters.
+The mock returns at most 20 matching customers.
+
+Successful response:
+
+```json
+{
+  "customers": [
+    {
+      "id": "cus_001",
+      "name": "Alex Rivera",
+      "email": "alex@example.com",
+      "plan": "pro"
+    }
+  ]
+}
+```
+
+No matches returns HTTP 200 with an empty customers array.
+
+The success, slow, error, and invalid simulation modes also apply
+to this endpoint.
+
+## Development connectivity
+
+Run the mock:
+
+```bash
+npm run dev:customers
+```
+
+In another terminal, run:
+
+```bash
+cloudflared tunnel --url http://127.0.0.1:3001
+```
+
+Set CUSTOMER_API_BASE_URL in the Convex development deployment to
+the generated HTTPS base URL. Update it whenever the tunnel URL changes.
+
+The tunnel exposes fictional mock data and is for development only.
