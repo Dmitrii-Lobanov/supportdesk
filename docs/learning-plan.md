@@ -93,9 +93,9 @@ Verification:
 
 ## Epic 4 — REST integration
 
-- [ ] Define the customer data contract.
-- [ ] Build a separate mock customer REST service.
-- [ ] Add simulated delay and failure responses.
+- [x] Define the customer data contract.
+- [x] Build a separate mock customer REST service.
+- [x] Add simulated delay and failure responses.
 - [ ] Retrieve customer data through a Convex action.
 - [ ] Validate external responses at runtime.
 - [ ] Display loading, success, missing-customer, and failure states.

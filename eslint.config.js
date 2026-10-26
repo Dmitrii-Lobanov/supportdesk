@@ -9,6 +9,13 @@ import eslintConfigPrettier from "eslint-config-prettier";
 export default defineConfig([
   globalIgnores(["dist"]),
   {
+    files: ["mocks/**/*.mjs"],
+    extends: [js.configs.recommended, eslintConfigPrettier],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
     files: ["**/*.{ts,tsx}"],
     extends: [
       js.configs.recommended,

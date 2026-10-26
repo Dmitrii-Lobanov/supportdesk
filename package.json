@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "format:check": "prettier . --check",
+    "dev:customers": "node --watch mocks/customer-api.mjs"
   },
   "dependencies": {
     "@clerk/react": "^6.18.1",
