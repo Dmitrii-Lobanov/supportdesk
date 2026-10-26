@@ -30,6 +30,7 @@ export default defineSchema({
     input: v.object({
       subject: v.string(),
       description: v.string(),
+      customerId: v.optional(v.string()),
     }),
     startedAt: v.optional(v.number()),
     finishedAt: v.optional(v.number()),

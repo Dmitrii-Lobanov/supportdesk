@@ -48,7 +48,7 @@ export default function AnalysisPanel({ ticketId }: AnalysisPanelProps) {
     <section className="analysis-panel" aria-label="Ticket analysis">
       <h2>Ticket analysis</h2>
       <p className="analysis-note">
-        Simulated processing. AI integration comes later.
+        Loads customer context in the background. AI integration comes later.
       </p>
 
       {job === undefined ? (

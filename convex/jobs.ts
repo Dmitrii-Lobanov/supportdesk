@@ -1,8 +1,15 @@
 import { ConvexError, v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import {
+  internalAction,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 import { internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { requireMember } from "./lib/auth";
+import { fetchCustomer } from "./lib/customerApi";
 
 export const latest = query({
   args: {
@@ -51,6 +58,7 @@ export const start = mutation({
       input: {
         subject: ticket.subject,
         description: ticket.description,
+        ...(ticket.customerId ? { customerId: ticket.customerId } : {}),
       },
     });
 
@@ -78,9 +86,82 @@ export const begin = internalMutation({
       startedAt: Date.now(),
     });
 
-    await ctx.scheduler.runAfter(15000, internal.jobs.finish, {
+    await ctx.scheduler.runAfter(0, internal.jobs.run, {
       jobId: job._id,
     });
+
+    // If the worker stops unexpectedly, don't leave the job running forever.
+    await ctx.scheduler.runAfter(60_000, internal.jobs.fail, {
+      jobId: job._id,
+      error: "Processing timed out. Please run the analysis again.",
+    });
+
+    return null;
+  },
+});
+
+export const getRunning = internalQuery({
+  args: {
+    jobId: v.id("jobs"),
+  },
+  handler: async (ctx, args): Promise<Doc<"jobs"> | null> => {
+    const job = await ctx.db.get(args.jobId);
+
+    return job?.status === "running" ? job : null;
+  },
+});
+
+export const run = internalAction({
+  args: {
+    jobId: v.id("jobs"),
+  },
+  handler: async (ctx, args): Promise<null> => {
+    const job = await ctx.runQuery(internal.jobs.getRunning, {
+      jobId: args.jobId,
+    });
+
+    if (!job) {
+      return null;
+    }
+
+    try {
+      let customerContext = "No customer linked.";
+
+      if (job.input.customerId) {
+        const customer = await fetchCustomer(job.input.customerId);
+
+        if (!customer) {
+          throw new ConvexError("The linked customer no longer exists.");
+        }
+
+        customerContext = `Customer: ${customer.name}. Plan: ${customer.plan}.`;
+      }
+
+      const result = [
+        `Ticket: ${job.input.subject}`,
+        `Description preview: ${job.input.description.slice(0, 160)}`,
+        customerContext,
+        "Customer context loaded. AI analysis is not connected yet.",
+      ].join("\n\n");
+
+      await ctx.runMutation(internal.jobs.finish, {
+        jobId: job._id,
+        result,
+      });
+    } catch (error) {
+      console.error("Ticket analysis failed", {
+        jobId: job._id,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+
+      await ctx.runMutation(internal.jobs.fail, {
+        jobId: job._id,
+        error:
+          error instanceof ConvexError && typeof error.data === "string"
+            ? error.data
+            : "Analysis failed. Please try again.",
+      });
+    }
 
     return null;
   },
@@ -89,6 +170,7 @@ export const begin = internalMutation({
 export const finish = internalMutation({
   args: {
     jobId: v.id("jobs"),
+    result: v.string(),
   },
   handler: async (ctx, args): Promise<null> => {
     const job = await ctx.db.get(args.jobId);
@@ -102,7 +184,8 @@ export const finish = internalMutation({
     if (
       !ticket ||
       ticket.subject !== job.input.subject ||
-      ticket.description !== job.input.description
+      ticket.description !== job.input.description ||
+      ticket.customerId !== job.input.customerId
     ) {
       await ctx.db.patch(job._id, {
         status: "failed",
@@ -116,9 +199,29 @@ export const finish = internalMutation({
     await ctx.db.patch(job._id, {
       status: "succeeded",
       finishedAt: Date.now(),
-      result:
-        `Simulated analysis for "${job.input.subject}". ` +
-        `Preview: ${job.input.description.slice(0, 160)}`,
+      result: args.result,
+    });
+
+    return null;
+  },
+});
+
+export const fail = internalMutation({
+  args: {
+    jobId: v.id("jobs"),
+    error: v.string(),
+  },
+  handler: async (ctx, args): Promise<null> => {
+    const job = await ctx.db.get(args.jobId);
+
+    if (!job || job.status !== "running") {
+      return null;
+    }
+
+    await ctx.db.patch(job._id, {
+      status: "failed",
+      finishedAt: Date.now(),
+      error: args.error,
     });
 
     return null;
