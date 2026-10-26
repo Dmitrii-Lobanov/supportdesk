@@ -11,7 +11,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "dev:customers": "node --watch mocks/customer-api.mjs"
+    "dev:customers": "node --watch mocks/customer-api.js"
   },
   "dependencies": {
     "@clerk/react": "^6.18.1",
