@@ -2,6 +2,7 @@ import { useQuery } from "convex/react";
 import { Link, useParams } from "react-router";
 import { api } from "../../convex/_generated/api";
 import TicketCard from "../components/TicketCard";
+import CustomerPanel from "../components/CustomerPanel";
 import "./TicketDetailPage.css";
 
 export default function TicketDetailPage() {
@@ -30,16 +31,10 @@ export default function TicketDetailPage() {
               <TicketCard key={ticket._id} ticket={ticket} />
             </ul>
 
-            <div className="customer-reference">
-              <h2>Customer</h2>
-              {ticket.customerId ? (
-                <p>
-                  Customer ID: <code>{ticket.customerId}</code>
-                </p>
-              ) : (
-                <p>No customer linked to this ticket.</p>
-              )}
-            </div>
+            <CustomerPanel
+              key={`${ticket._id}:${ticket.customerId ?? "none"}`}
+              ticket={ticket}
+            />
           </>
         )}
       </section>
