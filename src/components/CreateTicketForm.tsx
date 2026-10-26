@@ -16,6 +16,7 @@ export default function CreateTicketForm() {
     useState<NonNullable<Doc<"tickets">["priority"]>>("medium");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [customerId, setCustomerId] = useState("");
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,10 +27,11 @@ export default function CreateTicketForm() {
     setError(null);
 
     try {
-      await createTicket({ subject, description, priority });
+      await createTicket({ subject, description, priority, customerId });
       setSubject("");
       setDescription("");
       setPriority("medium");
+      setCustomerId("");
     } catch (error) {
       setError(
         error instanceof ConvexError
@@ -43,6 +45,19 @@ export default function CreateTicketForm() {
 
   return (
     <form className="ticket-form" onSubmit={handleSubmit}>
+      <label htmlFor="customer-id">Customer ID</label>
+      <input
+        id="customer-id"
+        value={customerId}
+        onChange={(event) => setCustomerId(event.target.value)}
+        placeholder="cus_001"
+        maxLength={68}
+        pattern="cus_[a-zA-Z0-9_-]{1,64}"
+        title="Use cus_ followed by 1–64 letters, numbers, underscores, or hyphens."
+        disabled={isSubmitting}
+        required
+      />
+
       <label htmlFor="subject">Subject</label>
       <input
         id="subject"
@@ -86,7 +101,12 @@ export default function CreateTicketForm() {
       <button
         className="button"
         type="submit"
-        disabled={isSubmitting || !subject.trim() || !description.trim()}
+        disabled={
+          isSubmitting ||
+          !subject.trim() ||
+          !description.trim() ||
+          !customerId.trim()
+        }
       >
         {isSubmitting ? "Creating…" : "Create ticket"}
       </button>

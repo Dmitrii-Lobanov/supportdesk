@@ -25,9 +25,22 @@ export default function TicketDetailPage() {
         ) : ticket === undefined ? (
           <p role="status">Loading ticket…</p>
         ) : (
-          <ul className="ticket-list">
-            <TicketCard key={ticket._id} ticket={ticket} />
-          </ul>
+          <>
+            <ul className="ticket-list">
+              <TicketCard key={ticket._id} ticket={ticket} />
+            </ul>
+
+            <div className="customer-reference">
+              <h2>Customer</h2>
+              {ticket.customerId ? (
+                <p>
+                  Customer ID: <code>{ticket.customerId}</code>
+                </p>
+              ) : (
+                <p>No customer linked to this ticket.</p>
+              )}
+            </div>
+          </>
         )}
       </section>
     </main>

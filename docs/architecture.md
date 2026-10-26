@@ -67,12 +67,13 @@ Convex automatically adds `_id` and `_creationTime` to documents.
 
 ### tickets
 
-| Field         | Type                                 | Purpose                          |
-| ------------- | ------------------------------------ | -------------------------------- |
-| `subject`     | string                               | Short description of the request |
-| `description` | string                               | Request details                  |
-| `status`      | `open`, `in_progress`, or `resolved` | Workflow state                   |
-| `priority`    | Optional `low`, `medium`, or `high`  | Request urgency                  |
+| Field         | Type                                 | Purpose                                              |
+| ------------- | ------------------------------------ | ---------------------------------------------------- |
+| `subject`     | string                               | Short description of the request                     |
+| `description` | string                               | Request details                                      |
+| `status`      | `open`, `in_progress`, or `resolved` | Workflow state                                       |
+| `priority`    | Optional `low`, `medium`, or `high`  | Request urgency                                      |
+| `customerId`  | Optional string                      | Reference to a customer in the external REST service |
 
 Index: `by_status`, on `status`.
 

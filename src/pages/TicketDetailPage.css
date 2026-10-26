@@ -10,3 +10,24 @@
 .back-link:hover {
   text-decoration: underline;
 }
+
+.customer-reference {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.customer-reference h2 {
+  margin-bottom: 12px;
+}
+
+.customer-reference p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.customer-reference code {
+  color: #172033;
+  overflow-wrap: anywhere;
+}

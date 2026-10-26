@@ -38,6 +38,7 @@ export const create = mutation({
   args: {
     subject: v.string(),
     description: v.string(),
+    customerId: v.string(),
     priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
   },
   handler: async (ctx, args) => {
@@ -45,6 +46,12 @@ export const create = mutation({
 
     const subject = args.subject.trim();
     const description = args.description.trim();
+
+    const customerId = args.customerId.trim();
+
+    if (!/^cus_[a-zA-Z0-9_-]{1,64}$/.test(customerId)) {
+      throw new ConvexError("Enter a valid customer ID starting with cus_.");
+    }
 
     if (subject.length === 0 || subject.length > 120) {
       throw new ConvexError("Subject must contain 1–120 characters.");
@@ -57,6 +64,7 @@ export const create = mutation({
     return await ctx.db.insert("tickets", {
       subject,
       description,
+      customerId,
       status: "open",
       priority: args.priority,
     });

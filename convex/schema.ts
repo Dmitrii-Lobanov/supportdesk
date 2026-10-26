@@ -5,6 +5,7 @@ export default defineSchema({
   tickets: defineTable({
     subject: v.string(),
     description: v.string(),
+    customerId: v.optional(v.string()),
     status: v.union(
       v.literal("open"),
       v.literal("in_progress"),
