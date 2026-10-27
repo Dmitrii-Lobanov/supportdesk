@@ -16,6 +16,7 @@
 
 .analysis-result {
   padding: 16px;
+  margin-bottom: 16px;
   color: #273449;
   background: #f8fafc;
   border: 1px solid var(--border);
