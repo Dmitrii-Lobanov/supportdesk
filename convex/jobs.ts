@@ -12,6 +12,7 @@ import { requireMember } from "./lib/auth";
 import { fetchCustomer } from "./lib/customerApi";
 import { analyzeTicket } from "./lib/analyzeTicket";
 import { analysisRecordValidator } from "./lib/analysisValidators";
+import { reserveAnalysisRequest } from "./lib/analysisUsage";
 
 export const latest = query({
   args: {
@@ -52,6 +53,8 @@ export const start = mutation({
     ) {
       return latestJob._id;
     }
+
+    await reserveAnalysisRequest(ctx, member.clerkUserId);
 
     const jobId = await ctx.db.insert("jobs", {
       ticketId: ticket._id,

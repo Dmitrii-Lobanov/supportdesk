@@ -19,6 +19,11 @@ export default defineSchema({
   workspaceMembers: defineTable({
     clerkUserId: v.string(),
   }).index("by_clerk_user", ["clerkUserId"]),
+  analysisUsage: defineTable({
+    clerkUserId: v.string(),
+    day: v.string(),
+    requests: v.number(),
+  }).index("by_member_day", ["clerkUserId", "day"]),
   jobs: defineTable({
     ticketId: v.id("tickets"),
     requestedBy: v.string(),
