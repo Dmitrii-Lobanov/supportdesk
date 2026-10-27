@@ -26,6 +26,7 @@ export default defineSchema({
       v.literal("running"),
       v.literal("succeeded"),
       v.literal("failed"),
+      v.literal("cancelled"),
     ),
     input: v.object({
       subject: v.string(),

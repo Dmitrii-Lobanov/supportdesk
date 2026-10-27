@@ -227,3 +227,29 @@ export const fail = internalMutation({
     return null;
   },
 });
+
+export const cancel = mutation({
+  args: {
+    jobId: v.id("jobs"),
+  },
+  handler: async (ctx, args): Promise<null> => {
+    await requireMember(ctx);
+
+    const job = await ctx.db.get(args.jobId);
+
+    if (!job) {
+      throw new ConvexError("Job not found.");
+    }
+
+    if (job.status !== "queued" && job.status !== "running") {
+      return null;
+    }
+
+    await ctx.db.patch(job._id, {
+      status: "cancelled",
+      finishedAt: Date.now(),
+    });
+
+    return null;
+  },
+});

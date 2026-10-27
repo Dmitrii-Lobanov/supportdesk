@@ -14,14 +14,18 @@ const statusLabels = {
   running: "Analyzing…",
   succeeded: "Completed",
   failed: "Failed",
+  cancelled: "Cancelled",
 };
 
 export default function AnalysisPanel({ ticketId }: AnalysisPanelProps) {
   const job = useQuery(api.jobs.latest, { ticketId });
   const startJob = useMutation(api.jobs.start);
 
+  const cancelJob = useMutation(api.jobs.cancel);
+
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const isActive = job?.status === "queued" || job?.status === "running";
 
@@ -41,6 +45,25 @@ export default function AnalysisPanel({ ticketId }: AnalysisPanelProps) {
       );
     } finally {
       setIsStarting(false);
+    }
+  }
+
+  async function handleCancel() {
+    if (!job || !isActive || isCancelling) return;
+
+    setIsCancelling(true);
+    setError(null);
+
+    try {
+      await cancelJob({ jobId: job._id });
+    } catch (error) {
+      setError(
+        error instanceof ConvexError
+          ? String(error.data)
+          : "Could not cancel analysis. Please try again.",
+      );
+    } finally {
+      setIsCancelling(false);
     }
   }
 
@@ -73,7 +96,7 @@ export default function AnalysisPanel({ ticketId }: AnalysisPanelProps) {
             onClick={() => {
               void handleStart();
             }}
-            disabled={isStarting || isActive}
+            disabled={isStarting || isCancelling || isActive}
           >
             {isStarting
               ? "Starting…"
@@ -83,6 +106,22 @@ export default function AnalysisPanel({ ticketId }: AnalysisPanelProps) {
                   ? "Analyze again"
                   : "Analyze ticket"}
           </button>
+
+          {isActive && (
+            <button
+              className="analysis-button"
+              type="button"
+              onClick={() => {
+                void handleCancel();
+              }}
+              disabled={isCancelling}
+              style={{
+                marginLeft: "8px",
+              }}
+            >
+              {isCancelling ? "Cancelling…" : "Cancel analysis"}
+            </button>
+          )}
         </>
       )}
     </section>
