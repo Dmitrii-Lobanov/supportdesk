@@ -27,11 +27,13 @@ These are planning estimates, not tracked time.
 
 ## Current position
 
-Epic 3: authentication and workspace authorization are implemented.
-Complete the access verification checklist before starting Epic 4.
+Epic 6: defining the structured analysis contract before connecting Claude.
 
-Checked implementation items indicate code is present. They do not
-replace verification.
+The background worker, persisted results, manual reruns, timeout handling,
+duplicate prevention, cancellation, and stale-input checks are implemented.
+Automatic bounded retries remain outstanding in Epic 5.
+
+Implementation does not imply that all verification checks have passed.
 
 ## Epic 1 — First working slice
 
