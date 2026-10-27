@@ -11,6 +11,8 @@
 import type * as customers from "../customers.js";
 import type * as jobs from "../jobs.js";
 import type * as lib_analysisPrompt from "../lib/analysisPrompt.js";
+import type * as lib_analysisValidators from "../lib/analysisValidators.js";
+import type * as lib_analyzeTicket from "../lib/analyzeTicket.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_customerApi from "../lib/customerApi.js";
 import type * as memberships from "../memberships.js";
@@ -26,6 +28,8 @@ declare const fullApi: ApiFromModules<{
   customers: typeof customers;
   jobs: typeof jobs;
   "lib/analysisPrompt": typeof lib_analysisPrompt;
+  "lib/analysisValidators": typeof lib_analysisValidators;
+  "lib/analyzeTicket": typeof lib_analyzeTicket;
   "lib/auth": typeof lib_auth;
   "lib/customerApi": typeof lib_customerApi;
   memberships: typeof memberships;

@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { analysisRecordValidator } from "./lib/analysisValidators";
 
 export default defineSchema({
   tickets: defineTable({
@@ -36,6 +37,7 @@ export default defineSchema({
     startedAt: v.optional(v.number()),
     finishedAt: v.optional(v.number()),
     result: v.optional(v.string()),
+    analysis: v.optional(analysisRecordValidator),
     error: v.optional(v.string()),
   }).index("by_ticket", ["ticketId"]),
 });

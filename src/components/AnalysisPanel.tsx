@@ -71,7 +71,7 @@ export default function AnalysisPanel({ ticketId }: AnalysisPanelProps) {
     <section className="analysis-panel" aria-label="Ticket analysis">
       <h2>Ticket analysis</h2>
       <p className="analysis-note">
-        Loads customer context in the background. AI integration comes later.
+        AI-generated suggestions. Review and edit before using.
       </p>
 
       {job === undefined ? (
@@ -82,9 +82,29 @@ export default function AnalysisPanel({ ticketId }: AnalysisPanelProps) {
             {job ? statusLabels[job.status] : "No analysis requested yet."}
           </p>
 
-          {job?.status === "succeeded" && (
-            <p className="analysis-result">{job.result}</p>
-          )}
+          {job?.status === "succeeded" &&
+            (job.analysis ? (
+              <div className="analysis-result">
+                <h3>Summary</h3>
+                <p>{job.analysis.summary}</p>
+
+                <p>
+                  <strong>Category:</strong> {job.analysis.category}
+                </p>
+
+                <h3>Suggested reply — review before use</h3>
+                <p style={{ whiteSpace: "pre-wrap" }}>
+                  {job.analysis.draftReply}
+                </p>
+
+                <small>
+                  {job.analysis.model} · {job.analysis.inputTokens} input tokens
+                  · {job.analysis.outputTokens} output tokens
+                </small>
+              </div>
+            ) : (
+              <p className="analysis-result">{job.result}</p>
+            ))}
 
           {job?.status === "failed" && <p role="alert">{job.error}</p>}
 

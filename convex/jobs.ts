@@ -10,6 +10,8 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { requireMember } from "./lib/auth";
 import { fetchCustomer } from "./lib/customerApi";
+import { analyzeTicket } from "./lib/analyzeTicket";
+import { analysisRecordValidator } from "./lib/analysisValidators";
 
 export const latest = query({
   args: {
@@ -125,28 +127,38 @@ export const run = internalAction({
     }
 
     try {
-      let customerContext = "No customer linked.";
+      const customer = job.input.customerId
+        ? await fetchCustomer(job.input.customerId)
+        : null;
 
-      if (job.input.customerId) {
-        const customer = await fetchCustomer(job.input.customerId);
-
-        if (!customer) {
-          throw new ConvexError("The linked customer no longer exists.");
-        }
-
-        customerContext = `Customer: ${customer.name}. Plan: ${customer.plan}.`;
+      if (job.input.customerId && !customer) {
+        throw new ConvexError("The linked customer no longer exists.");
       }
 
-      const result = [
-        `Ticket: ${job.input.subject}`,
-        `Description preview: ${job.input.description.slice(0, 160)}`,
-        customerContext,
-        "Customer context loaded. AI analysis is not connected yet.",
-      ].join("\n\n");
+      // Cancellation may have happened during the customer request.
+      const activeJob = await ctx.runQuery(internal.jobs.getRunning, {
+        jobId: job._id,
+      });
+
+      if (!activeJob) {
+        return null;
+      }
+
+      const analysis = await analyzeTicket({
+        subject: job.input.subject,
+        description: job.input.description,
+        customer: customer
+          ? {
+              name: customer.name,
+              plan: customer.plan,
+            }
+          : null,
+      });
 
       await ctx.runMutation(internal.jobs.finish, {
         jobId: job._id,
-        result,
+        result: analysis.summary,
+        analysis,
       });
     } catch (error) {
       console.error("Ticket analysis failed", {
@@ -171,6 +183,7 @@ export const finish = internalMutation({
   args: {
     jobId: v.id("jobs"),
     result: v.string(),
+    analysis: v.optional(analysisRecordValidator),
   },
   handler: async (ctx, args): Promise<null> => {
     const job = await ctx.db.get(args.jobId);
@@ -188,9 +201,10 @@ export const finish = internalMutation({
       ticket.customerId !== job.input.customerId
     ) {
       await ctx.db.patch(job._id, {
-        status: "failed",
+        status: "succeeded",
         finishedAt: Date.now(),
-        error: "Ticket content changed or the ticket was removed. Run again.",
+        result: args.result,
+        analysis: args.analysis,
       });
 
       return null;
