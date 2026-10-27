@@ -3,3 +3,7 @@ dist/
 coverage/
 convex/_generated/
 package-lock.json
+
+.wrangler/
+test-results/
+playwright-report/

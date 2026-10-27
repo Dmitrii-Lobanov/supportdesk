@@ -16,6 +16,61 @@ jobs:
   checks:
     name: Validate application
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      VITE_CONVEX_URL: ${{ vars.VITE_CONVEX_URL }}
+      VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check frontend configuration
+        run: |
+          test -n "$VITE_CONVEX_URL" || {
+            echo "Missing repository variable VITE_CONVEX_URL"
+            exit 1
+          }
+          test -n "$VITE_CLERK_PUBLISHABLE_KEY" || {
+            echo "Missing repository variable VITE_CLERK_PUBLISHABLE_KEY"
+            exit 1
+          }
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Check lint
+        run: npm run lint
+
+      - name: Run contract and backend tests
+        run: npm run test:all
+
+      - name: Build application
+        run: npm run build
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser smoke tests
+        run: npx playwright test
+
+  deploy-customers:
+    name: Deploy customer API
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
@@ -33,14 +88,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check formatting
-        run: npm run format:check
+      - name: Deploy Worker
+        run: npm run deploy:customers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Check lint
-        run: npm run lint
-
-      - name: Run tests
-        run: npm run test:all
-
-      - name: Build application
-        run: npm run build
+      - name: Check deployed health endpoint
+        run: |
+          curl --fail --silent --show-error \
+            --retry 3 --retry-delay 3 --max-time 20 \
+            https://supportdesk-customers.dmlob-supportdesk.workers.dev/health
