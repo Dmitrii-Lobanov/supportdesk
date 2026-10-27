@@ -138,7 +138,10 @@ npm run lint
 npm run build
 ```
 
-Automated application tests are not yet part of the project.
+Run the AI contract and backend tests with:
+
+````bash
+npm run test:all
 
 ## Project structure
 
@@ -158,7 +161,7 @@ src/
   pages/               Ticket list and detail pages
   styles/              Shared layout and feature styles
   index.css            Global defaults and design variables
-```
+````
 
 ## Current limitations
 
