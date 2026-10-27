@@ -14,7 +14,9 @@
     "dev:customers": "node --watch mocks/customer-api.js",
     "test": "node --test tests/analysis.test.ts",
     "test:backend": "vitest run",
-    "test:all": "npm test && npm run test:backend"
+    "test:all": "npm test && npm run test:backend",
+    "dev:worker": "wrangler dev",
+    "deploy:customers": "wrangler deploy"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
@@ -44,6 +46,7 @@
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.2",
     "vite": "^8.3.4",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "wrangler": "^4.154.0"
   }
 }
