@@ -267,3 +267,44 @@ export const cancel = mutation({
     return null;
   },
 });
+
+export const saveDraft = mutation({
+  args: {
+    jobId: v.id("jobs"),
+    text: v.string(),
+    expectedRevision: v.number(),
+  },
+  handler: async (ctx, args): Promise<number> => {
+    const member = await requireMember(ctx);
+    const job = await ctx.db.get(args.jobId);
+
+    if (!job || job.status !== "succeeded" || !job.analysis) {
+      throw new ConvexError("This analysis has no editable draft.");
+    }
+
+    const text = args.text.trim();
+
+    if (!text || text.length > 3000) {
+      throw new ConvexError("Drafts must contain 1–3,000 characters.");
+    }
+
+    const revision = job.draftRevision ?? 0;
+
+    if (args.expectedRevision !== revision) {
+      throw new ConvexError(
+        "Another member updated this draft. Copy your edits, then load the latest saved draft.",
+      );
+    }
+
+    const nextRevision = revision + 1;
+
+    await ctx.db.patch(job._id, {
+      reviewedDraft: text,
+      draftRevision: nextRevision,
+      draftUpdatedAt: Date.now(),
+      draftUpdatedBy: member.clerkUserId,
+    });
+
+    return nextRevision;
+  },
+});

@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import ReplyDraftEditor from "./ReplyDraftEditor";
 import "./AnalysisPanel.css";
 
 type AnalysisPanelProps = {
@@ -96,6 +97,14 @@ export default function AnalysisPanel({ ticketId }: AnalysisPanelProps) {
                 <p style={{ whiteSpace: "pre-wrap" }}>
                   {job.analysis.draftReply}
                 </p>
+
+                <ReplyDraftEditor
+                  key={job._id}
+                  jobId={job._id}
+                  suggestedDraft={job.analysis.draftReply}
+                  savedDraft={job.reviewedDraft}
+                  revision={job.draftRevision ?? 0}
+                />
 
                 <small>
                   {job.analysis.model} · {job.analysis.inputTokens} input tokens

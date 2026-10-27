@@ -38,6 +38,10 @@ export default defineSchema({
     finishedAt: v.optional(v.number()),
     result: v.optional(v.string()),
     analysis: v.optional(analysisRecordValidator),
+    reviewedDraft: v.optional(v.string()),
+    draftRevision: v.optional(v.number()),
+    draftUpdatedAt: v.optional(v.number()),
+    draftUpdatedBy: v.optional(v.string()),
     error: v.optional(v.string()),
   }).index("by_ticket", ["ticketId"]),
 });

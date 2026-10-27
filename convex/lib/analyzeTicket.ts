@@ -1,6 +1,6 @@
 import { ConvexError } from "convex/values";
 import { analyzeWithGroq } from "./analyzeWithGroq";
-import { AnalysisInput, analyzeWithClaude } from "./analyzeWithClaude";
+import { type AnalysisInput, analyzeWithClaude } from "./analyzeWithClaude";
 
 export async function analyzeTicket(input: AnalysisInput) {
   // Validate before either provider receives the request.

@@ -46,3 +46,31 @@
   background: #e8edf5;
   cursor: not-allowed;
 }
+
+.reply-editor {
+  margin-block: 20px;
+  white-space: normal;
+}
+
+.reply-editor label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.reply-editor textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.reply-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
