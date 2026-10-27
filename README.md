@@ -1,9 +1,18 @@
 # SupportDesk
 
-A deployed customer support demo built with React, TypeScript, and Convex.
-Manage tickets, load customer details, and generate AI-assisted reply drafts.
+A customer support workspace built with React, TypeScript, and Convex,
+featuring reactive ticket updates and background AI analysis.
 
-[Live demo](https://supportdesk-virid.vercel.app/)
+**Watch the 76-second walkthrough:** customer selection → ticket creation →
+AI analysis → saved reply draft → status update.
+
+[![Watch the SupportDesk demo](https://img.youtube.com/vi/6m3Fvd7pkd4/hqdefault.jpg)](https://www.youtube.com/watch?v=6m3Fvd7pkd4)
+
+[Live app](https://supportdesk-virid.vercel.app/) ·
+[Watch demo](https://www.youtube.com/watch?v=6m3Fvd7pkd4)
+
+The video shows the complete workflow without requiring sign-in.
+Interactive workspace access requires approval.
 
 ## Demo access
 
