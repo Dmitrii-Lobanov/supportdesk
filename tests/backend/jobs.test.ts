@@ -158,3 +158,102 @@ test("rejects a result generated from outdated ticket content", async () => {
   expect(job?.error).toContain("Ticket content changed");
   expect(job?.result).toBeUndefined();
 });
+
+test("rejects a stale draft save without overwriting another member's edit", async () => {
+  const { t, member, ticketId } = await setup();
+
+  const jobId = await t.run(async (ctx) => {
+    await ctx.db.insert("workspaceMembers", {
+      clerkUserId: "user_second_member",
+    });
+
+    return await ctx.db.insert("jobs", {
+      ticketId,
+      requestedBy: "user_member",
+      status: "succeeded",
+      input: {
+        subject: "Cannot reset password",
+        description: "The reset link has expired.",
+      },
+      analysis: {
+        summary: "The password reset link expired.",
+        category: "account",
+        draftReply: "Please request a new password reset link.",
+        model: "test-model",
+        promptVersion: "test-v1",
+        inputTokens: 100,
+        outputTokens: 50,
+      },
+    });
+  });
+
+  const revision = await member.mutation(api.jobs.saveDraft, {
+    jobId,
+    text: "Please request a fresh reset link and use it immediately.",
+    expectedRevision: 0,
+  });
+
+  expect(revision).toBe(1);
+
+  const secondMember = t.withIdentity({
+    subject: "user_second_member",
+  });
+
+  await expect(
+    secondMember.mutation(api.jobs.saveDraft, {
+      jobId,
+      text: "A conflicting edit from another member.",
+      expectedRevision: 0,
+    }),
+  ).rejects.toThrow("Another member updated this draft");
+
+  const job = await t.run((ctx) => ctx.db.get(jobId));
+
+  expect(job?.reviewedDraft).toBe(
+    "Please request a fresh reset link and use it immediately.",
+  );
+  expect(job?.draftRevision).toBe(1);
+  expect(job?.draftUpdatedBy).toBe("user_member");
+
+  // The original AI suggestion must remain unchanged.
+  expect(job?.analysis?.draftReply).toBe(
+    "Please request a new password reset link.",
+  );
+});
+
+test("allows a new analysis after midnight UTC", async () => {
+  const { t, member, ticketId } = await setup();
+
+  vi.setSystemTime(new Date("2026-10-27T23:59:59Z"));
+
+  const firstJobId = await member.mutation(api.jobs.start, {
+    ticketId,
+  });
+
+  await member.mutation(api.jobs.cancel, {
+    jobId: firstJobId,
+  });
+
+  await expect(member.mutation(api.jobs.start, { ticketId })).rejects.toThrow(
+    "daily analysis limit",
+  );
+
+  vi.setSystemTime(new Date("2026-10-28T00:00:00Z"));
+
+  const secondJobId = await member.mutation(api.jobs.start, {
+    ticketId,
+  });
+
+  expect(secondJobId).not.toBe(firstJobId);
+
+  const usage = await t.run((ctx) => ctx.db.query("analysisUsage").collect());
+
+  expect(
+    usage
+      .map(({ day, requests }) => ({ day, requests }))
+      .sort((a, b) => a.day.localeCompare(b.day)),
+  ).toEqual([
+    { day: "2026-10-27", requests: 1 },
+    { day: "2026-10-28", requests: 1 },
+  ]);
+});
