@@ -93,7 +93,7 @@ export const begin = internalMutation({
     });
 
     // If the worker stops unexpectedly, don't leave the job running forever.
-    await ctx.scheduler.runAfter(60_000, internal.jobs.fail, {
+    await ctx.scheduler.runAfter(120_000, internal.jobs.fail, {
       jobId: job._id,
       error: "Processing timed out. Please run the analysis again.",
     });
@@ -201,10 +201,9 @@ export const finish = internalMutation({
       ticket.customerId !== job.input.customerId
     ) {
       await ctx.db.patch(job._id, {
-        status: "succeeded",
+        status: "failed",
         finishedAt: Date.now(),
-        result: args.result,
-        analysis: args.analysis,
+        error: "Ticket content changed or the ticket was removed. Run again.",
       });
 
       return null;
@@ -214,6 +213,7 @@ export const finish = internalMutation({
       status: "succeeded",
       finishedAt: Date.now(),
       result: args.result,
+      analysis: args.analysis,
     });
 
     return null;

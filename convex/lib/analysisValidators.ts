@@ -9,6 +9,7 @@ export const analysisRecordValidator = v.object({
     v.literal("general"),
   ),
   draftReply: v.string(),
+  provider: v.optional(v.union(v.literal("anthropic"), v.literal("groq"))),
   model: v.string(),
   promptVersion: v.string(),
   inputTokens: v.number(),
