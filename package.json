@@ -12,7 +12,7 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "dev:customers": "node --watch mocks/customer-api.js",
-    "test": "node --test tests/analysis.test.ts",
+    "test": "node --test tests/analysis.test.ts tests/customer-api.test.ts",
     "test:backend": "vitest run",
     "test:all": "npm test && npm run test:backend",
     "dev:worker": "wrangler dev",
