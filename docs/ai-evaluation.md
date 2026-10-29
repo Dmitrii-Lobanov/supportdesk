@@ -84,7 +84,17 @@ Check:
 
 ## Results
 
+Status as of October 29, 2026: these four scenario evaluations have not been
+recorded. The hosted walkthrough shows one successful Groq analysis, which is
+separate demonstration evidence and does not fill this table. Mocked fallback
+tests establish orchestration behavior, not live provider quality.
+
 Fill this table after observing actual output.
+
+For each run, include the date, deployment/commit, ticket or job reference,
+provider/model, prompt version, observed output, and a brief reason for the verdict.
+Use fictional data and redact credentials from any evidence. Do not infer a Claude
+pass from a Groq fallback result.
 
 | Case                  | Provider/model | Prompt version | Pass/fail | Notes |
 | --------------------- | -------------- | -------------- | --------- | ----- |

@@ -1,169 +1,61 @@
-# Learning Plan
+# Learning plan and delivery status
 
 ## Objective
 
-Build SupportDesk while learning to deliver a React and Convex
-application with external integrations, background processing, and
-production verification.
+Build and explain a React/TypeScript support workspace with Convex reactive data,
+REST integration, background AI jobs, tests, and independent hosted services.
+The developer implemented incremental changes with AI-assisted guidance and review.
+See [development workflow](development-workflow.md) for the process and its limits.
 
-The developer implements each increment with guided instructions,
-code explanations, verification steps, and independent exercises.
-
-## Time budget
-
-Target: 50 hours, with a 10-hour debugging buffer.
-
-These are planning estimates, not tracked time.
-
-| Epic                    |   Budget |
-| ----------------------- | -------: |
-| 1. First working slice  |  5 hours |
-| 2. Ticket workflow      |  8 hours |
-| 3. Authentication       |  6 hours |
-| 4. REST integration     |  5 hours |
-| 5. Background jobs      |  8 hours |
-| 6. Claude assistance    |  7 hours |
-| 7. Ship and demonstrate | 11 hours |
+The original target was 50 hours plus a 10-hour debugging buffer. These were
+planning estimates, not tracked hours or measured delivery speed.
 
 ## Current position
 
-Epic 6: defining the structured analysis contract before connecting Claude.
+The portfolio demo is implemented, deployed, and recorded. Documentation now
+reflects the completed application. Feature implementation, automated coverage,
+manual observation, and remaining verification are tracked separately; the full
+verification matrix is in [verification](verification.md).
 
-The background worker, persisted results, manual reruns, timeout handling,
-duplicate prevention, cancellation, and stale-input checks are implemented.
-Automatic bounded retries remain outstanding in Epic 5.
+| Increment        | Implemented                                                                                                                         | Remaining work / evidence limits                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Foundation       | React/TypeScript, formatting/lint, Convex schema and generated client                                                               | No measured performance baseline                                                |
+| Ticket workflow  | Creation, status, detail routes, priority, indexed filters, reactive pagination, reusable selects/cards                             | More keyboard, responsive, and edge-case UI verification                        |
+| Access           | Clerk, backend membership checks, internal provisioning, access gates                                                               | One workspace, manual approval, no role hierarchy                               |
+| REST integration | Shared Node/Worker mock, customer search/selection/details, Convex actions, runtime validation, timeouts                            | Fictional backend; controlled network-error checks remain                       |
+| Background jobs  | Snapshot, persistent states, scheduler, watchdog, active-job reuse, cancellation, stale-result rejection                            | Automatic bounded retries; cancellation does not guarantee stopping billing     |
+| AI assistance    | Claude adapter, Groq fallback, strict output contract, metadata, editable revision-protected drafts, daily admission quota          | Monetary budgets, complete failed-attempt usage, completed provider evaluations |
+| Delivery         | Vercel frontend, hosted Worker, CI validation before Worker deploy, backend/contract tests, signed-out browser tests, recorded demo | Separate staging/production, authenticated browser E2E, recovery drill          |
 
-Implementation does not imply that all verification checks have passed.
+## Next priorities
 
-## Epic 1 — First working slice
+1. Complete and record the remaining hosted/manual checks without marking unrun
+   cases passed. Start with saved-draft/status reload and two-window reactivity.
+2. Run the fictional scenarios in [AI evaluation](ai-evaluation.md), identifying
+   the provider/model and prompt version for each result.
+3. Add authenticated E2E with isolated data and a controlled test environment.
+4. Separate staging and production before claiming production-environment ownership.
+5. Add idempotency-aware bounded retries, per-attempt accounting, and a monetary
+   budget when expanding beyond the current demo.
 
-- [x] Create React and TypeScript application.
-- [x] Configure ESLint and Prettier.
-- [x] Connect a Convex development deployment.
-- [x] Define the ticket schema.
-- [x] Implement ticket creation and listing.
-- [x] Display creation timestamps.
-
-Verification:
-
-- [ ] Create a ticket and confirm it survives refresh.
-- [ ] Confirm live updates between two browser windows.
-- [ ] Confirm server-side input validation.
-
-## Epic 2 — Ticket workflow
-
-- [x] Add ticket status changes.
-- [x] Extract reusable ticket cards.
-- [x] Add detail routes and missing-ticket handling.
-- [x] Add a reusable styled select.
-- [x] Separate CSS by responsibility.
-- [x] Add creation priority and display badges.
-- [x] Add indexed status filtering.
-- [x] Separate routing, list page, and creation form.
-- [x] Add cursor-based pagination.
-
-Verification:
-
-- [ ] Create tickets with Low, Medium, and High priority.
-- [ ] Confirm older tickets display the Medium fallback.
-- [ ] Confirm status changes persist and update other windows.
-- [ ] Test direct detail URLs, refresh, and browser navigation.
-- [ ] Test invalid IDs and unknown routes.
-- [ ] Verify filtering and empty results.
-- [ ] Verify Load more and filter changes.
-- [ ] Check keyboard controls and narrow-screen layout.
-
-## Epic 3 — Authentication and authorization
-
-- [x] Connect Clerk and Convex authentication providers.
-- [x] Add sign-in and account controls.
-- [x] Guard ticket functions against signed-out requests.
-- [x] Add workspace membership records.
-- [x] Add internal member provisioning.
-- [x] Require membership in all ticket functions.
-- [x] Add loading and access-required screens.
-
-Verification:
-
-- [ ] Test sign-in and sign-out.
-- [ ] Confirm the Google provider works if enabled.
-- [ ] Confirm approved members can use the ticket workflow.
-- [ ] Confirm signed-in nonmembers cannot access tickets.
-- [ ] Confirm direct detail URLs remain protected.
-- [ ] Confirm unauthenticated backend requests are rejected.
-- [ ] Confirm repeated provisioning returns the existing membership.
-
-## Epic 4 — REST integration
-
-- [x] Define the customer data contract.
-- [x] Build a separate mock customer REST service.
-- [x] Add simulated delay and failure responses.
-- [ ] Retrieve customer data through a Convex action.
-- [ ] Validate external responses at runtime.
-- [ ] Display loading, success, missing-customer, and failure states.
-- [ ] Document data freshness and persistence decisions.
-
-## Epic 5 — Background jobs
-
-- [ ] Define a jobs table and state transitions.
-- [ ] Create and schedule a job from a mutation.
-- [ ] Implement simulated analysis.
-- [ ] Persist progress, results, and errors.
-- [ ] Display job state after navigation and refresh.
-- [ ] Add bounded retries and duplicate prevention.
-- [ ] Prevent stale results from replacing newer work.
-
-## Epic 6 — Claude assistance
-
-- [ ] Define structured summaries and draft responses.
-- [ ] Replace simulated analysis with a Claude API call.
-- [ ] Validate output before saving.
-- [ ] Let agents review and edit drafts.
-- [ ] Record model, prompt version, and usage.
-- [ ] Add input limits and a usage budget.
-- [ ] Verify rate-limit and provider-failure handling.
-- [ ] Evaluate results with fictional support scenarios.
-
-## Epic 7 — Ship and demonstrate
-
-- [ ] Add meaningful authorization and workflow tests.
-- [ ] Add an end-to-end test for the main workflow.
-- [ ] Configure staging and production environments.
-- [ ] Configure automated validation.
-- [ ] Deploy and verify direct frontend routes.
-- [ ] Verify authentication, integrations, and background work.
-- [ ] Document troubleshooting and deployment recovery.
-- [ ] Prepare a five-minute interview demonstration.
-
-## Deferred scope
-
-- Multiple workspaces
-- Invitations and member-management UI
-- Advanced roles
-- Priority editing
-- Attachments and email ingestion
-- Comments and activity history
-- Billing and knowledge-base features
-
-## Interview practice
+## Interview discussion
 
 Be able to explain:
 
-- Queries, mutations, and actions
-- Reactive subscriptions and frontend state ownership
-- Runtime validation versus TypeScript types
-- Indexes and cursor-based pagination
-- Authentication versus authorization
-- Backend membership enforcement
-- Internal versus public functions
-- Safe retries and external-service side effects
-- Deployment configuration and production verification
+- Why queries, mutations, and actions have different responsibilities.
+- How subscriptions change frontend state ownership and cache invalidation.
+- Why filtering must precede pagination and why indexes matter.
+- What runtime validation adds beyond TypeScript.
+- Authentication versus authorization and public versus internal functions.
+- Why remote customer validation and ticket insertion are not cross-service atomic.
+- Job-state invariants, late responses, cancellation limits, and safe retries.
+- Expected-revision checks and preservation of unsaved user edits.
+- Fallback costs, request quotas versus monetary budgets, and evaluation limits.
+- What CI checks prove, which deployments it gates, and what manual checks remain.
 
-## Maintenance
+## Deferred product scope
 
-At the end of each epic:
-
-1. Run the relevant checks.
-2. Mark only verified outcomes as complete.
-3. Update the README and architecture if behavior changed.
-4. Record important decisions without documenting every implementation detail.
+Multiple workspaces, invitations/roles, priority editing, attachments, email
+ingestion/delivery, comments/activity history, billing, and knowledge-base features.
+The project demonstrates technical decisions; it does not by itself establish
+professional tenure, customer-facing experience, or use of a particular AI editor.

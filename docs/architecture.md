@@ -1,239 +1,165 @@
 # Architecture
 
-## Overview
+SupportDesk is a single-workspace support demo built with React, TypeScript,
+Convex, and Clerk. The frontend is hosted on Vercel; an independent Cloudflare
+Worker supplies fictional customer records. This document describes the current
+implementation, not a production-readiness certification.
 
-SupportDesk uses React for the interface, Convex for persistent data and
-backend functions, and Clerk for authentication.
+## System boundaries
 
-```text
-Browser: React
-  |
-  | Clerk session and authentication token
-  v
-Convex validates identity
-  |
-  | Backend membership check
-  v
-Ticket queries and mutations
-  |
-  v
-Convex database
-  |
-  | Updated query results
-  v
-Subscribed React components
+```mermaid
+flowchart LR
+  UI[React on Vercel] --> Clerk[Clerk authentication]
+  UI --> Queries[Convex queries and mutations]
+  UI --> Actions[Convex actions]
+  Queries <--> DB[(Convex database)]
+  Queries --> Scheduler[Convex scheduler]
+  Scheduler --> Worker[Analysis action]
+  Actions --> Customers[Customer REST API on Cloudflare]
+  Actions --> Queries
+  Worker --> Customers
+  Worker --> Claude[Claude API]
+  Worker --> Groq[Groq fallback]
+  Worker --> Queries
 ```
 
-The application currently supports one shared workspace.
+Clerk establishes identity. Convex checks approved workspace membership on public
+data operations. Browser access gates improve the experience but are not the
+security boundary. Provider credentials remain in the Convex environment.
 
-## Frontend responsibilities
+## Frontend architecture and state ownership
 
-| File or component  | Responsibility                                                 |
-| ------------------ | -------------------------------------------------------------- |
-| `main.tsx`         | Initialize Clerk and the authenticated Convex client           |
-| `App.tsx`          | Define routes and compose access boundaries                    |
-| `AuthGate`         | Show sign-in, session loading, or authenticated content        |
-| `WorkspaceGate`    | Show membership loading, access required, or workspace content |
-| `TicketListPage`   | Manage the status filter and paginated ticket query            |
-| `CreateTicketForm` | Manage draft fields and submit ticket creation                 |
-| `TicketCard`       | Display a ticket and update its status                         |
-| `TicketDetailPage` | Load a ticket using the ID in the URL                          |
-| `Select`           | Provide a styled, reusable Radix select                        |
+| Layer                 | Responsibilities                                               | Representative files                                                   |
+| --------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Providers and routing | Authenticated Convex client, routes, access boundaries         | `src/main.tsx`, `src/App.tsx`                                          |
+| Access gates          | Session and membership loading, sign-in, access-required views | `AuthGate`, `WorkspaceGate`                                            |
+| Ticket workflow       | Creation, indexed status filter, pagination, detail lookup     | `TicketListPage`, `TicketDetailPage`, `CreateTicketForm`, `TicketCard` |
+| External integration  | Customer selection and explicit detail loading                 | `CustomerPicker`, `CustomerPanel`                                      |
+| AI workflow           | Persistent job state, cancellation, results, draft editing     | `AnalysisPanel`, `ReplyDraftEditor`                                    |
+| Reusable UI           | Consistent selection behavior and feature styles               | `Select`, shared and component CSS                                     |
 
-## State ownership
+Convex owns saved tickets, memberships, jobs, analysis results, draft revisions,
+and request counters. React owns unsaved form fields, selected customer, filters,
+transient action responses, and pending/error indicators.
 
-Local React state contains:
+`useQuery` and `usePaginatedQuery` subscribe to persisted data. There is no second
+Redux/Zustand cache of ticket records to reconcile after writes. This is a scope
+decision: a separate client store could become useful for complex cross-page
+unsaved state, but is not needed for the current workflow. External customer
+action responses are loaded explicitly; they are not reactive subscriptions.
 
-- Unsaved subject and description
-- Selected creation priority
-- Current status filter
-- Submission and update indicators
-- Recoverable mutation error messages
-
-Convex contains:
-
-- Saved tickets
-- Workspace membership records
-
-The frontend reads saved records through query subscriptions. It does
-not maintain a second independent copy of the ticket list.
-
-Successful creation clears the draft fields and resets the form priority
-to Medium. This reset does not modify the saved ticket.
+`ReplyDraftEditor` intentionally retains local edits when a newer saved revision
+arrives. It warns the user, disables stale saving, and offers an explicit reload.
+The backend independently rejects conflicting revisions.
 
 ## Data model
 
-Convex automatically adds `_id` and `_creationTime` to documents.
+Convex supplies `_id` and `_creationTime` on every document.
 
-### tickets
+| Table              | Key fields and purpose                                                                                      | Index           |
+| ------------------ | ----------------------------------------------------------------------------------------------------------- | --------------- |
+| `tickets`          | Subject, description, status, optional priority and external customer ID                                    | `by_status`     |
+| `workspaceMembers` | Approved Clerk user ID                                                                                      | `by_clerk_user` |
+| `jobs`             | Ticket/requester, input snapshot, state, timestamps, result, analysis metadata, reviewed draft and revision | `by_ticket`     |
+| `analysisUsage`    | Clerk user ID, UTC day, admitted job count                                                                  | `by_member_day` |
 
-| Field         | Type                                 | Purpose                                              |
-| ------------- | ------------------------------------ | ---------------------------------------------------- |
-| `subject`     | string                               | Short description of the request                     |
-| `description` | string                               | Request details                                      |
-| `status`      | `open`, `in_progress`, or `resolved` | Workflow state                                       |
-| `priority`    | Optional `low`, `medium`, or `high`  | Request urgency                                      |
-| `customerId`  | Optional string                      | Reference to a customer in the external REST service |
+New ticket subjects contain 1–120 trimmed characters; descriptions contain
+1–5,000. Priority is required on creation but optional in storage for legacy
+records; missing priority displays as Medium. Status is `open`, `in_progress`,
+or `resolved`. Only the external customer ID is stored on the ticket.
 
-Index: `by_status`, on `status`.
+Membership provisioning checks before insertion; an index is not itself a unique
+constraint. Identity is derived on the server, not supplied by the browser for
+authorization. The current membership key uses Clerk's subject within the one
+configured issuer; multiple identity providers would require revisiting that key.
 
-Priority remains optional to support records created before the field
-was introduced. New ticket creation requires a priority. The interface
-displays missing priority as Medium without rewriting the record.
+## Queries, mutations, and actions
 
-Creation validates trimmed subject and description lengths on the server.
+| Function                                      | Kind              | Responsibility                                    |
+| --------------------------------------------- | ----------------- | ------------------------------------------------- |
+| `tickets:list`, `tickets:get`                 | Query             | Authorized reactive reads                         |
+| `tickets:create`                              | Action            | Validate input and the selected external customer |
+| `tickets:insert`                              | Internal mutation | Recheck membership and insert the ticket          |
+| `tickets:updateStatus`                        | Mutation          | Validate and persist a status change              |
+| `memberships:current`                         | Query             | Return the caller's membership or null            |
+| `memberships:addMember`                       | Internal mutation | Provision membership through trusted tooling      |
+| `customers:search`, `customers:getForTicket`  | Action            | Authorize and validate REST responses             |
+| `jobs:latest`                                 | Query             | Subscribe to the newest ticket job                |
+| `jobs:start`, `jobs:cancel`, `jobs:saveDraft` | Mutation          | Admit work, cancel it, or save a revision         |
+| `jobs:begin`, `jobs:finish`, `jobs:fail`      | Internal mutation | Apply guarded job transitions                     |
+| `jobs:getRunning`                             | Internal query    | Read work that is still active                    |
+| `jobs:run`                                    | Internal action   | Retrieve customer context and call AI providers   |
 
-### workspaceMembers
+Network calls belong in actions, outside database transactions. Ticket creation
+therefore validates a customer in an action before an internal insert mutation.
+That remote lookup and insert are not an atomic transaction across services; the
+customer could disappear afterward and later lookup must handle that case.
 
-| Field         | Type   | Purpose                                  |
-| ------------- | ------ | ---------------------------------------- |
-| `clerkUserId` | string | Clerk user approved for workspace access |
+## Filtering, pagination, and routing
 
-Index: `by_clerk_user`, on `clerkUserId`.
+Status filtering uses `by_status` before `.paginate()`. Filtering only loaded
+React records could miss matches on later pages. `usePaginatedQuery` manages
+cursors; changing filter arguments resets the result set. No manual list refetch
+is needed after creation or status updates. Reactive page sizes can change.
 
-The application uses Clerk's stable user ID rather than an email address.
+`/` shows tickets; `/tickets/:ticketId` queries a ticket directly. Invalid or
+missing IDs produce a missing-ticket view; unknown routes show page not found.
+Vercel rewrites application routes to `index.html` for direct visits and refresh.
 
-The index is not a database uniqueness constraint. The provisioning
-mutation checks for an existing membership before inserting one.
-Membership records should be created through that function to avoid
-duplicates.
+## Background analysis and user feedback
 
-## Backend functions
-
-| Function                | Type              | Access requirement                             |
-| ----------------------- | ----------------- | ---------------------------------------------- |
-| `tickets:list`          | Query             | Workspace membership                           |
-| `tickets:get`           | Query             | Workspace membership                           |
-| `tickets:create`        | Mutation          | Workspace membership                           |
-| `tickets:updateStatus`  | Mutation          | Workspace membership                           |
-| `memberships:current`   | Query             | Returns the current user's membership, or null |
-| `memberships:addMember` | Internal mutation | Trusted dashboard, CLI, or backend invocation  |
-
-Queries read data. Mutations validate and change database records
-transactionally.
-
-External API calls will be introduced through actions in a later epic.
-
-## Authentication and authorization
-
-Clerk handles sign-in and session management.
-
-`ConvexProviderWithClerk` supplies authentication tokens to Convex.
-`auth.config.ts` configures token validation.
-
-`requireUser` reads the validated identity and rejects signed-out
-requests.
-
-`requireMember` uses `identity.subject` to look up workspace membership
-and rejects users who have not been approved.
-
-The frontend does not supply the user ID used for these access checks.
-
-```text
-AuthGate
-  -> WorkspaceGate
-    -> Ticket pages
+```mermaid
+stateDiagram-v2
+  [*] --> queued: start and reserve allowance
+  queued --> running: scheduled begin
+  queued --> cancelled: member cancels
+  running --> cancelled: member cancels
+  running --> succeeded: validated current result
+  running --> failed: provider error, stale input, or timeout
 ```
 
-The gates control what appears in the interface. Backend guards enforce
-access independently on every ticket function.
+1. `start` checks membership and returns an existing queued/running job instead
+   of charging another allowance. Otherwise the mutation reserves a daily request,
+   saves the input snapshot, and schedules `begin` after one second.
+2. `begin` transitions only queued work, schedules the action, and schedules a
+   two-minute watchdog. The watchdog changes only work that is still running.
+3. The action loads customer context, checks that the job remains active, and
+   calls Claude, then Groq if Claude fails.
+4. `finish` accepts only a running job and compares current ticket subject,
+   description, and customer ID with the snapshot. Changed or removed input fails
+   the job instead of publishing an outdated answer. Status changes alone do not
+   invalidate analysis.
 
-A signed-in user without membership can check their own membership but
-cannot read or modify tickets.
+The UI subscribes to the job, so navigating away or refreshing does not lose its
+state. Pending states, errors, cancellation, and manual reruns are visible.
+Cancellation prevents a late result from being saved; it does not guarantee that
+an already-issued provider request stops or avoids billing. Automatic bounded
+retries and exactly-once external execution are not implemented guarantees.
 
-## Member provisioning
+## AI contract and human review
 
-The current process is manual:
+Both adapters request structured JSON and apply the strict Zod contract in
+`shared/analysis.ts`: summary up to 1,200 characters, one of four categories,
+and a reply draft up to 3,000 characters. Incomplete or invalid responses fail.
+Successful analysis records include provider, model, prompt version, and token
+usage. Ticket text is serialized separately from system instructions and treated
+as untrusted input; this is a mitigation, not a proof against prompt injection.
 
-1. The user signs up through Clerk.
-2. A developer copies their Clerk user ID.
-3. The developer runs `memberships:addMember`.
-4. Convex inserts a membership record.
-5. The subscribed membership query updates the interface.
+Only customer name and plan are added to the AI context, not the separate email
+field. Ticket text itself may contain personal data; real customer use needs a
+data-handling review. The app does not send email or execute suggested refunds.
 
-The internal mutation cannot be invoked directly by a browser client.
+Saving a reviewed draft compares `expectedRevision` with the stored revision in
+a mutation, then increments it and records editor/time. A stale save cannot
+silently overwrite another edit. Drafts belong to a job; rerunning analysis makes
+a new job and does not merge an older job's reviewed draft into the new one.
 
-Its user ID prefix check catches obvious input mistakes; it does not
-query Clerk to verify that the user exists.
+## Scope and evidence
 
-Invitations, roles, and a member-management interface are future work.
-
-## Reactive updates
-
-React subscribes to query results using Convex hooks.
-
-When relevant database data changes, Convex updates the subscribed
-results. React then renders the new data.
-
-For example, changing an Open ticket to Resolved removes it from an
-active Open-status result set.
-
-No manual list refetch is needed after creation or status changes.
-
-## Filtering and pagination
-
-The list query uses the `by_status` index when a status is selected.
-
-Filtering happens in the backend before pagination. Filtering only the
-records already loaded into React could hide matching records on later
-pages.
-
-The backend uses `.paginate()`. The frontend uses `usePaginatedQuery`
-to manage continuation cursors and combine loaded pages.
-
-Changing the status filter resets pagination for the new arguments.
-
-Pages remain reactive, so their sizes may change as records are added
-or stop matching the query.
-
-## Routing
-
-| Route                | Purpose                       |
-| -------------------- | ----------------------------- |
-| `/`                  | Ticket list and creation form |
-| `/tickets/:ticketId` | Ticket details                |
-| Other paths          | Page-not-found view           |
-
-Ticket details are queried directly by ID rather than searched for in
-the currently loaded list.
-
-The detail query normalizes the URL string into a ticket ID and returns
-null for invalid or missing records.
-
-Production hosting must serve the frontend entry point for application
-routes so direct navigation and refresh work.
-
-## Styling
-
-- `index.css`: global defaults, color variables, focus and error styles
-- `styles/layout.css`: shared page and panel structure
-- Feature stylesheets: forms, filters, and pagination
-- Component stylesheets: ticket cards, selects, and authentication UI
-- Page stylesheets: detail-page-specific rules
-
-Plain CSS imports remain global. Class names and scoped selectors
-prevent unrelated controls from inheriting feature-specific styles.
-
-## Environment boundaries
-
-Vite reads frontend variables from local environment files during
-development and from the frontend build environment during deployment.
-
-Convex backend environment variables belong to the selected deployment.
-
-Development and production must use corresponding Clerk and Convex
-configuration.
-
-## Future architecture
-
-Planned additions:
-
-- REST customer lookup through Convex actions
-- Persistent background-job state
-- Claude-generated summaries and response drafts
-- Usage limits and AI cost tracking
-- Automated tests and production deployment
-
-Supporting multiple workspaces would require a workspaces table,
-workspace IDs on tickets and memberships, workspace-aware indexes,
-and authorization checks scoped to each ticket's workspace.
+See [engineering decisions](engineering-decisions.md),
+[verification](verification.md), and [deployment](deployment.md).
+The app has one shared workspace with manually approved, equally privileged
+members. Multi-workspace isolation needs workspace IDs, scoped indexes and guards.
+Separate staging/production, automatic retries, monetary budgets, and full
+authenticated browser automation remain future work. No load-test or measured
+performance claim is made.

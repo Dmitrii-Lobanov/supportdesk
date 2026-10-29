@@ -14,6 +14,19 @@ AI analysis → saved reply draft → status update.
 The video shows the complete workflow without requiring sign-in.
 Interactive workspace access requires approval.
 
+## Engineering highlights
+
+- Reactive queries keep ticket lists and persistent job status synchronized.
+- Convex actions validate customer REST responses and AI output at runtime.
+- Backend membership checks protect operations independently of UI access gates.
+- Scheduled jobs support active-job reuse, cancellation, timeouts, and stale-result rejection.
+- Expected-revision checks prevent conflicting reply drafts from overwriting saved edits.
+- Automated checks validate contracts, backend behavior, and signed-out browser access.
+
+Explore the [architecture](docs/architecture.md),
+[engineering decisions](docs/engineering-decisions.md), and
+[verification evidence](docs/verification.md) for implementation details and limits.
+
 ## Demo access
 
 Sign in with GitHub, Google, or email. Workspace access requires approval;
@@ -116,4 +129,9 @@ Worker. Vercel deploys the frontend through its Git integration.
 
 - [Deployment](docs/deployment.md)
 - [Architecture notes](docs/architecture.md)
+- [Customer API contract](docs/customer-api.md)
+- [Engineering decisions](docs/engineering-decisions.md)
+- [AI-assisted development workflow](docs/development-workflow.md)
+- [Verification and demo evidence](docs/verification.md)
+- [AI evaluation plan and results](docs/ai-evaluation.md)
 - [Learning plan](docs/learning-plan.md)
